@@ -47,13 +47,13 @@ export class PostsController {
     @Body('title') title?: string,
     @Body('content') content?: string,
   ) {
-    return this.postsService.updatePost(id, author, title, content);
+    return this.postsService.updatePost(author, title, content, +id);
   }
 
   //5) DELETE /posts/:id
   // - id에 해당되는 특정 게시물을 삭제합니다.
   @Delete('/:id')
   deletePost(@Param('id') id: string) {
-    return this.postsService.deletePost(id);
+    return this.postsService.deletePost(+id);
   }
 }
