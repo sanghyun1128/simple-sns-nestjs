@@ -16,4 +16,8 @@ export class UsersService {
 
     return newUser;
   }
+
+  async getAllUsers() {
+    return this.usersRepository.find();
+  }
 }
