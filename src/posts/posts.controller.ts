@@ -31,11 +31,11 @@ export class PostsController {
   // - 새로운 게시물을 생성합니다.
   @Post()
   postPosts(
-    @Body('author') author: string,
+    @Body('authorId') authorId: number,
     @Body('title') title: string,
     @Body('content') content: string,
   ) {
-    return this.postsService.createPost(author, title, content);
+    return this.postsService.createPost(authorId, title, content);
   }
 
   //4) PUT /posts/:id
@@ -47,7 +47,7 @@ export class PostsController {
     @Body('title') title?: string,
     @Body('content') content?: string,
   ) {
-    return this.postsService.updatePost(author, title, content, +id);
+    return this.postsService.updatePost(title, content, +id);
   }
 
   //5) DELETE /posts/:id
