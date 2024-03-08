@@ -84,8 +84,8 @@ export class AuthService {
     return splitToken[1];
   }
 
-  decodeBasicToken(base64String: string) {
-    const decoded = Buffer.from(base64String, 'base64').toString('utf8');
+  decodeBasicToken(token: string) {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
     const split = decoded.split(':');
 
     if (split.length !== 2) {
@@ -93,5 +93,23 @@ export class AuthService {
     }
 
     return { email: split[0], password: split[1] };
+  }
+
+  verifyToken(token: string) {
+    return this.jwtService.verify(token, {
+      secret: JWT_SECRET,
+    });
+  }
+
+  rotateToken(token: string, isRefresh: boolean) {
+    const decoded = this.verifyToken(token);
+
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException(
+        '토큰 재발급은 Refresh 토큰만 가능합니다.',
+      );
+    }
+
+    return this.signToken({ ...decoded }, isRefresh);
   }
 }
