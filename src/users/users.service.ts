@@ -10,14 +10,40 @@ export class UsersService {
     private readonly usersRepository: Repository<UsersModel>,
   ) {}
 
-  async createUser(nickname: string, email: string, password: string) {
-    const user = this.usersRepository.create({ nickname, email, password });
-    const newUser = await this.usersRepository.save(user);
+  async createUser(user: Pick<UsersModel, 'nickname' | 'email' | 'password'>) {
+    const nicknameExists = await this.usersRepository.findOne({
+      where: { nickname: user.nickname },
+    });
+
+    if (nicknameExists) {
+      throw new Error('이미 존재하는 닉네임입니다.');
+    }
+
+    const emailExists = await this.usersRepository.findOne({
+      where: { email: user.email },
+    });
+
+    if (emailExists) {
+      throw new Error('이미 가입한 이메일입니다.');
+    }
+
+    const userObject = this.usersRepository.create({
+      nickname: user.nickname,
+      email: user.email,
+      password: user.password,
+    });
+    const newUser = await this.usersRepository.save(userObject);
 
     return newUser;
   }
 
   async getAllUsers() {
     return this.usersRepository.find();
+  }
+
+  async getUserByEmail(email: string) {
+    return this.usersRepository.findOne({
+      where: { email },
+    });
   }
 }
