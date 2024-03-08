@@ -68,4 +68,30 @@ export class AuthService {
 
     return this.loginUser(newUser);
   }
+
+  extractTokenFromHeader(header: string, isBearer: boolean) {
+    if (!header) {
+      throw new UnauthorizedException('토큰이 없습니다.');
+    }
+
+    const splitToken = header.split(' ');
+    const prefix = isBearer ? 'Bearer' : 'Basic';
+
+    if (splitToken.length !== 2 || splitToken[0] !== prefix) {
+      throw new UnauthorizedException('올바른 토큰이 아닙니다.');
+    }
+
+    return splitToken[1];
+  }
+
+  decodeBasicToken(base64String: string) {
+    const decoded = Buffer.from(base64String, 'base64').toString('utf8');
+    const split = decoded.split(':');
+
+    if (split.length !== 2) {
+      throw new UnauthorizedException('올바른 토큰이 아닙니다.');
+    }
+
+    return { email: split[0], password: split[1] };
+  }
 }
