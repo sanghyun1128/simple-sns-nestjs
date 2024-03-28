@@ -15,5 +15,9 @@ export const User = createParamDecorator((data, context: ExecutionContext) => {
     );
   }
 
+  if (data) {
+    return user[data];
+  }
+
   return user;
 });
