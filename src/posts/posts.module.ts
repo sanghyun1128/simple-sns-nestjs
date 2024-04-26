@@ -7,6 +7,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { UsersService } from 'src/users/users.service';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { CommmonService } from 'src/commmon/commmon.service';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { JwtModule } from '@nestjs/jwt';
     TypeOrmModule.forFeature([PostsModel, UsersModel]),
   ],
   controllers: [PostsController],
-  providers: [PostsService, AuthService, UsersService],
+  providers: [PostsService, AuthService, UsersService, CommmonService],
 })
 export class PostsModule {}
