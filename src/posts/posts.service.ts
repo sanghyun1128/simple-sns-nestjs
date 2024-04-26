@@ -6,6 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { HOST, PROTOCOL } from 'src/commmon/const/env.const';
+import { CommmonService } from 'src/commmon/commmon.service';
 
 export interface PostModel {
   id: number;
@@ -21,6 +22,7 @@ export class PostsService {
   constructor(
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>,
+    private readonly commmonService: CommmonService,
   ) {}
 
   async getAllPosts() {
@@ -40,11 +42,12 @@ export class PostsService {
   }
 
   async paginatePosts(dto: PaginatePostDto) {
-    if (dto.page) {
-      return this.pagePaginatePosts(dto);
-    } else {
-      return this.cursorPaginatePosts(dto);
-    }
+    // if (dto.page) {
+    //   return this.pagePaginatePosts(dto);
+    // } else {
+    //   return this.cursorPaginatePosts(dto);
+    // }
+    return this.commmonService.paginate(dto, this.postsRepository, {}, 'posts');
   }
 
   async pagePaginatePosts(dto: PaginatePostDto) {
@@ -65,10 +68,10 @@ export class PostsService {
   async cursorPaginatePosts(dto: PaginatePostDto) {
     const where: FindOptionsWhere<PostsModel> = {};
 
-    if (dto.where__id_more_than) {
-      where.id = MoreThan(dto.where__id_more_than);
-    } else if (dto.where__id_less_than) {
-      where.id = LessThan(dto.where__id_less_than);
+    if (dto.where__id__more_than) {
+      where.id = MoreThan(dto.where__id__more_than);
+    } else if (dto.where__id__less_than) {
+      where.id = LessThan(dto.where__id__less_than);
     }
 
     const posts = await this.postsRepository.find({
