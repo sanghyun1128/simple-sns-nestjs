@@ -20,7 +20,6 @@ import {
 
 @Module({
   imports: [
-    PostsModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
@@ -35,6 +34,7 @@ import {
       entities: [PostsModel, UsersModel],
       synchronize: true,
     }),
+    PostsModule,
     UsersModule,
     AuthModule,
     CommmonModule,
