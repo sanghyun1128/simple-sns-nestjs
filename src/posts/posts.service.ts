@@ -5,8 +5,12 @@ import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { HOST, PROTOCOL } from 'src/commmon/const/env.const';
 import { CommmonService } from 'src/commmon/commmon.service';
+import { ConfigService } from '@nestjs/config';
+import {
+  ENV_HOST_KEY,
+  ENV_PROTOCOL_KEY,
+} from 'src/commmon/const/env-keys.const';
 
 export interface PostModel {
   id: number;
@@ -23,6 +27,7 @@ export class PostsService {
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>,
     private readonly commmonService: CommmonService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getAllPosts() {
@@ -92,7 +97,13 @@ export class PostsService {
         ? posts[posts.length - 1]
         : null;
 
-    const nextUrl = lastItem && new URL(`${PROTOCOL}://${HOST}/posts`);
+    const nextUrl =
+      lastItem &&
+      new URL(
+        `${this.configService.get<string>(
+          ENV_PROTOCOL_KEY,
+        )}://${this.configService.get<string>(ENV_HOST_KEY)}/posts`,
+      );
 
     if (nextUrl) {
       for (const key of Object.keys(dto)) {
