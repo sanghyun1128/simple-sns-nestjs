@@ -6,11 +6,11 @@ import { PostsModel } from './entities/posts.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
-import { CommmonModule } from 'src/commmon/commmon.module';
+import { CommmonModule } from 'src/common/common.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { extname } from 'path';
 import * as multer from 'multer';
-import { POST_IMAGE_PATH } from 'src/commmon/const/path.const';
+import { POST_IMAGE_PATH } from 'src/common/const/path.const';
 import { v4 as uuid } from 'uuid';
 
 @Module({

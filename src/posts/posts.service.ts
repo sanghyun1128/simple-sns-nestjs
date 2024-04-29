@@ -5,12 +5,12 @@ import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { CommmonService } from 'src/commmon/commmon.service';
+import { CommmonService } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
 import {
   ENV_HOST_KEY,
   ENV_PROTOCOL_KEY,
-} from 'src/commmon/const/env-keys.const';
+} from 'src/common/const/env-keys.const';
 
 export interface PostModel {
   id: number;

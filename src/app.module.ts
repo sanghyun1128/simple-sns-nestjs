@@ -7,7 +7,7 @@ import { PostsModel } from './posts/entities/posts.entity';
 import { UsersModel } from './users/entities/users.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { CommmonModule } from './commmon/commmon.module';
+import { CommmonModule } from './common/common.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import {
@@ -16,9 +16,9 @@ import {
   ENV_DB_PASSWORD_KEY,
   ENV_DB_PORT_KEY,
   ENV_DB_USERNAME_KEY,
-} from './commmon/const/env-keys.const';
+} from './common/const/env-keys.const';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { PUBLIC_FOLDER_PATH } from './commmon/const/path.const';
+import { PUBLIC_FOLDER_PATH } from './common/const/path.const';
 
 @Module({
   imports: [
