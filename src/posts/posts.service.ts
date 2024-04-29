@@ -5,7 +5,7 @@ import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { CommmonService } from 'src/common/common.service';
+import { CommonService } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
 import {
   ENV_HOST_KEY,
@@ -26,7 +26,7 @@ export class PostsService {
   constructor(
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>,
-    private readonly commmonService: CommmonService,
+    private readonly commonService: CommonService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -52,7 +52,7 @@ export class PostsService {
     // } else {
     //   return this.cursorPaginatePosts(dto);
     // }
-    return this.commmonService.paginate(
+    return this.commonService.paginate(
       dto,
       this.postsRepository,
       { relations: ['author'] },

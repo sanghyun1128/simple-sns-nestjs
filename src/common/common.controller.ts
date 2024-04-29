@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
-import { CommmonService } from './common.service';
+import { CommonService } from './common.service';
 
-@Controller('commmon')
-export class CommmonController {
-  constructor(private readonly commmonService: CommmonService) {}
+@Controller('common')
+export class CommonController {
+  constructor(private readonly commonService: CommonService) {}
 }

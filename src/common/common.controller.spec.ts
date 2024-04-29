@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CommmonController } from './common.controller';
-import { CommmonService } from './common.service';
+import { CommonController } from './common.controller';
+import { CommonService } from './common.service';
 
-describe('CommmonController', () => {
-  let controller: CommmonController;
+describe('CommonController', () => {
+  let controller: CommonController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [CommmonController],
-      providers: [CommmonService],
+      controllers: [CommonController],
+      providers: [CommonService],
     }).compile();
 
-    controller = module.get<CommmonController>(CommmonController);
+    controller = module.get<CommonController>(CommonController);
   });
 
   it('should be defined', () => {
