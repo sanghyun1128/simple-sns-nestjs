@@ -5,41 +5,33 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostsModel } from './entities/posts.entity';
-import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { CommonService } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
-import {
-  ENV_HOST_KEY,
-  ENV_PROTOCOL_KEY,
-} from 'src/common/const/env-keys.const';
 import { POST_IMAGE_PATH, TEMP_FOLDER_PATH } from 'src/common/const/path.const';
 import { basename, join } from 'path';
 import { promises } from 'fs';
-
-export interface PostModel {
-  id: number;
-  author: string;
-  title: string;
-  content: string;
-  likeCount: number;
-  commentCount: number;
-}
+import { CreatePostImageDto } from './image/dto/create-image.dto';
+import { ImageModel } from 'src/common/entity/image.entity';
+import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(PostsModel)
     private readonly postsRepository: Repository<PostsModel>,
+    @InjectRepository(ImageModel)
+    private readonly imageRepository: Repository<ImageModel>,
     private readonly commonService: CommonService,
     private readonly configService: ConfigService,
   ) {}
 
   async getAllPosts() {
     return this.postsRepository.find({
-      relations: ['author'],
+      ...DEFAULT_POST_FIND_OPTIONS,
     });
   }
 
@@ -49,6 +41,7 @@ export class PostsService {
       await this.createPost(userId, {
         title: `title ${i}`,
         content: `content ${i}`,
+        images: [],
       });
     }
   }
@@ -62,91 +55,17 @@ export class PostsService {
     return this.commonService.paginate(
       dto,
       this.postsRepository,
-      { relations: ['author'] },
+      { ...DEFAULT_POST_FIND_OPTIONS },
       'posts',
     );
   }
 
-  async pagePaginatePosts(dto: PaginatePostDto) {
-    const [posts, count] = await this.postsRepository.findAndCount({
-      skip: dto.take * (dto.page - 1),
-      take: dto.take,
-      order: {
-        createdAt: dto.order__createdAt,
-      },
-    });
-
-    return {
-      data: posts,
-      total: count,
-    };
-  }
-
-  async cursorPaginatePosts(dto: PaginatePostDto) {
-    const where: FindOptionsWhere<PostsModel> = {};
-
-    if (dto.where__id__more_than) {
-      where.id = MoreThan(dto.where__id__more_than);
-    } else if (dto.where__id__less_than) {
-      where.id = LessThan(dto.where__id__less_than);
-    }
-
-    const posts = await this.postsRepository.find({
-      where: where,
-      order: {
-        createdAt: dto.order__createdAt,
-      },
-      take: dto.take,
-    });
-
-    const lastItem =
-      posts.length > 0 && posts.length === dto.take
-        ? posts[posts.length - 1]
-        : null;
-
-    const nextUrl =
-      lastItem &&
-      new URL(
-        `${this.configService.get<string>(
-          ENV_PROTOCOL_KEY,
-        )}://${this.configService.get<string>(ENV_HOST_KEY)}/posts`,
-      );
-
-    if (nextUrl) {
-      for (const key of Object.keys(dto)) {
-        if (dto[key]) {
-          if (key !== 'where__id_more_than' && key !== 'where__id_less_than') {
-            nextUrl.searchParams.append(key, dto[key]);
-          }
-        }
-      }
-      let key = null;
-
-      if (dto.order__createdAt === 'ASC') {
-        key = 'where__id_more_than';
-      } else {
-        key = 'where__id_less_than';
-      }
-
-      nextUrl.searchParams.append(key, lastItem.id.toString());
-    }
-
-    return {
-      data: posts,
-      cursor: {
-        after: lastItem?.id ?? null,
-      },
-      count: posts.length,
-      next: nextUrl?.toString() ?? null,
-    };
-  }
-
   async getPostById(id: number) {
     const post = await this.postsRepository.findOne({
+      ...DEFAULT_POST_FIND_OPTIONS,
       where: {
         id: id,
       },
-      relations: ['author'],
     });
 
     if (!post) {
@@ -161,6 +80,7 @@ export class PostsService {
         id: authorId,
       },
       ...postDto,
+      images: [],
       likeCount: 0,
       commentCount: 0,
     });
@@ -170,8 +90,8 @@ export class PostsService {
     return newPost;
   }
 
-  async createPostImage(dto: CreatePostDto) {
-    const tempFilePath = join(TEMP_FOLDER_PATH, dto.image);
+  async createPostImage(dto: CreatePostImageDto) {
+    const tempFilePath = join(TEMP_FOLDER_PATH, dto.path);
 
     try {
       await promises.access(tempFilePath);
@@ -183,9 +103,11 @@ export class PostsService {
 
     const newFilePath = join(POST_IMAGE_PATH, fileName);
 
+    const result = await this.imageRepository.save({ ...dto });
+
     await promises.rename(tempFilePath, newFilePath);
 
-    return true;
+    return result;
   }
 
   async updatePost(id: number, postDto: UpdatePostDto) {
