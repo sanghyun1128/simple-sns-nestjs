@@ -18,10 +18,14 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { ImageModelType } from 'src/common/entity/image.entity';
+import { DataSource } from 'typeorm';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly dataSource: DataSource,
+  ) {}
 
   // 1) GET /posts
   // - 모든 게시물을 가져옵니다.
@@ -42,18 +46,31 @@ export class PostsController {
   @Post()
   @UseGuards(AccessTokenGuard)
   async postPosts(@User('id') userId: number, @Body() body: CreatePostDto) {
-    const post = await this.postsService.createPost(userId, body);
+    const qr = this.dataSource.createQueryRunner();
+    await qr.connect();
 
-    for (let i = 0; i < body.images.length; i++) {
-      await this.postsService.createPostImage({
-        post,
-        order: i,
-        path: body.images[i],
-        type: ImageModelType.POST_IMAGE,
-      });
+    await qr.startTransaction();
+
+    try {
+      const post = await this.postsService.createPost(userId, body);
+
+      for (let i = 0; i < body.images.length; i++) {
+        await this.postsService.createPostImage({
+          post,
+          order: i,
+          path: body.images[i],
+          type: ImageModelType.POST_IMAGE,
+        });
+      }
+
+      await qr.commitTransaction();
+      await qr.release();
+
+      return this.postsService.getPostById(post.id);
+    } catch (e) {
+      await qr.rollbackTransaction();
+      await qr.release();
     }
-
-    return this.postsService.getPostById(post.id);
   }
 
   //4) PATCH /posts/:id
