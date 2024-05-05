@@ -19,12 +19,14 @@ import { PaginatePostDto } from './dto/paginate-post.dto';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { ImageModelType } from 'src/common/entity/image.entity';
 import { DataSource } from 'typeorm';
+import { PostsImagesService } from './image/images.service';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private readonly postsService: PostsService,
     private readonly dataSource: DataSource,
+    private readonly postsImagesService: PostsImagesService,
   ) {}
 
   // 1) GET /posts
@@ -52,15 +54,18 @@ export class PostsController {
     await qr.startTransaction();
 
     try {
-      const post = await this.postsService.createPost(userId, body);
+      const post = await this.postsService.createPost(userId, body, qr);
 
       for (let i = 0; i < body.images.length; i++) {
-        await this.postsService.createPostImage({
-          post,
-          order: i,
-          path: body.images[i],
-          type: ImageModelType.POST_IMAGE,
-        });
+        await this.postsImagesService.createPostImage(
+          {
+            post,
+            order: i,
+            path: body.images[i],
+            type: ImageModelType.POST_IMAGE,
+          },
+          qr,
+        );
       }
 
       await qr.commitTransaction();

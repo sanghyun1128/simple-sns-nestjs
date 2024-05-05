@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { QueryRunner, Repository } from 'typeorm';
@@ -11,10 +7,6 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { CommonService } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
-import { POST_IMAGE_PATH, TEMP_FOLDER_PATH } from 'src/common/const/path.const';
-import { basename, join } from 'path';
-import { promises } from 'fs';
-import { CreatePostImageDto } from './image/dto/create-image.dto';
 import { ImageModel } from 'src/common/entity/image.entity';
 import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
 
@@ -96,26 +88,6 @@ export class PostsService {
     const newPost = await repository.save(post);
 
     return newPost;
-  }
-
-  async createPostImage(dto: CreatePostImageDto) {
-    const tempFilePath = join(TEMP_FOLDER_PATH, dto.path);
-
-    try {
-      await promises.access(tempFilePath);
-    } catch (e) {
-      throw new BadRequestException('이미지 파일이 존재하지 않습니다.');
-    }
-
-    const fileName = basename(tempFilePath);
-
-    const newFilePath = join(POST_IMAGE_PATH, fileName);
-
-    const result = await this.imageRepository.save({ ...dto });
-
-    await promises.rename(tempFilePath, newFilePath);
-
-    return result;
   }
 
   async updatePost(id: number, postDto: UpdatePostDto) {
