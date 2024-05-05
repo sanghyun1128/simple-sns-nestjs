@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -75,6 +76,10 @@ export class PostsController {
     } catch (e) {
       await qr.rollbackTransaction();
       await qr.release();
+
+      throw new InternalServerErrorException(
+        '게시물 생성 중 오류가 발생했습니다.',
+      );
     }
   }
 
