@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -20,9 +19,11 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { ImageModelType } from 'src/common/entity/image.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner as QR } from 'typeorm';
 import { PostsImagesService } from './image/images.service';
 import { LogInterceptor } from 'src/common/interceptor/log.interceptor';
+import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
+import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 
 @Controller('posts')
 export class PostsController {
@@ -50,40 +51,28 @@ export class PostsController {
   //3) POST /posts
   // - 새로운 게시물을 생성합니다.
   @Post()
+  @UseInterceptors(TransactionInterceptor)
   @UseGuards(AccessTokenGuard)
-  async postPosts(@User('id') userId: number, @Body() body: CreatePostDto) {
-    const qr = this.dataSource.createQueryRunner();
-    await qr.connect();
+  async postPosts(
+    @User('id') userId: number,
+    @Body() body: CreatePostDto,
+    @QueryRunner() qr: QR,
+  ) {
+    const post = await this.postsService.createPost(userId, body, qr);
 
-    await qr.startTransaction();
-
-    try {
-      const post = await this.postsService.createPost(userId, body, qr);
-
-      for (let i = 0; i < body.images.length; i++) {
-        await this.postsImagesService.createPostImage(
-          {
-            post,
-            order: i,
-            path: body.images[i],
-            type: ImageModelType.POST_IMAGE,
-          },
-          qr,
-        );
-      }
-
-      await qr.commitTransaction();
-      await qr.release();
-
-      return this.postsService.getPostById(post.id);
-    } catch (e) {
-      await qr.rollbackTransaction();
-      await qr.release();
-
-      throw new InternalServerErrorException(
-        '게시물 생성 중 오류가 발생했습니다.',
+    for (let i = 0; i < body.images.length; i++) {
+      await this.postsImagesService.createPostImage(
+        {
+          post,
+          order: i,
+          path: body.images[i],
+          type: ImageModelType.POST_IMAGE,
+        },
+        qr,
       );
     }
+
+    return this.postsService.getPostById(post.id, qr);
   }
 
   //4) PATCH /posts/:id
