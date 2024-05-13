@@ -5,10 +5,15 @@ import { ChatsGateway } from './chats.gateway';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatsModel } from './entity/chats.entity';
 import { CommonModule } from 'src/common/common.module';
+import { ChatMessagesService } from './messages/messages.service';
+import { MessagesModel } from './messages/entity/messages.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ChatsModel]), CommonModule],
+  imports: [
+    TypeOrmModule.forFeature([ChatsModel, MessagesModel]),
+    CommonModule,
+  ],
   controllers: [ChatsController],
-  providers: [ChatsService, ChatsGateway],
+  providers: [ChatsService, ChatsGateway, ChatMessagesService],
 })
 export class ChatsModule {}
