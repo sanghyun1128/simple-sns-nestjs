@@ -30,9 +30,12 @@ export class UsersModel extends BaseModel {
   @IsString({
     message: stringValidationMessage,
   })
-  @IsEmail(null, {
-    message: emailValidationMessage,
-  })
+  @IsEmail(
+    {},
+    {
+      message: emailValidationMessage,
+    },
+  )
   email: string;
 
   @Column()
@@ -42,7 +45,9 @@ export class UsersModel extends BaseModel {
   @Length(3, 8, {
     message: lengthValidationMessage,
   })
-  @Exclude()
+  @Exclude({
+    toPlainOnly: true,
+  })
   password: string;
 
   @Column({
