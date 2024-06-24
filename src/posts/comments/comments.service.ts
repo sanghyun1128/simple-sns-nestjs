@@ -4,6 +4,9 @@ import { CommonService } from 'src/common/common.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentsModel } from './entity/comments.entity';
 import { Repository } from 'typeorm';
+import { CreateCommentDto } from './dto/create-comment-dto';
+import { UsersModel } from 'src/users/entity/users.entity';
+import { DEFAULT_COMMENT_FIND_OPTIONS } from './const/default-comment-find-options.const';
 
 @Injectable()
 export class CommentsService {
@@ -18,6 +21,7 @@ export class CommentsService {
       dto,
       this.commentsRepository,
       {
+        ...DEFAULT_COMMENT_FIND_OPTIONS,
         where: {
           post: {
             id: postId,
@@ -30,6 +34,7 @@ export class CommentsService {
 
   async getCommentById(commentId: number) {
     const comment = await this.commentsRepository.findOne({
+      ...DEFAULT_COMMENT_FIND_OPTIONS,
       where: {
         id: commentId,
       },
@@ -39,5 +44,19 @@ export class CommentsService {
       throw new BadRequestException('Comment not found');
     }
     return comment;
+  }
+
+  async createComment(
+    postId: number,
+    body: CreateCommentDto,
+    author: UsersModel,
+  ) {
+    return this.commentsRepository.save({
+      ...body,
+      post: {
+        id: postId,
+      },
+      author,
+    });
   }
 }
