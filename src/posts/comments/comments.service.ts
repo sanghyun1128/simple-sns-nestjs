@@ -62,6 +62,16 @@ export class CommentsService {
   }
 
   async updateComment(dto: UpdateCommentsDto, commentId: number) {
+    const comment = this.commentsRepository.findOne({
+      where: {
+        id: commentId,
+      },
+    });
+
+    if (!comment) {
+      throw new BadRequestException('Comment not found');
+    }
+
     const prevComment = await this.commentsRepository.preload({
       id: commentId,
       ...dto,
@@ -73,8 +83,17 @@ export class CommentsService {
   }
 
   async deleteComment(commentId: number) {
-    return this.commentsRepository.delete({
-      id: commentId,
+    const comment = this.commentsRepository.findOne({
+      where: {
+        id: commentId,
+      },
     });
+
+    if (!comment) {
+      throw new BadRequestException('Comment not found');
+    }
+
+    await this.commentsRepository.delete(commentId);
+    return commentId;
   }
 }
