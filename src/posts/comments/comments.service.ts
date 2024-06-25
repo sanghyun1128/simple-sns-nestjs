@@ -71,4 +71,10 @@ export class CommentsService {
 
     return newComment;
   }
+
+  async deleteComment(commentId: number) {
+    return this.commentsRepository.delete({
+      id: commentId,
+    });
+  }
 }
