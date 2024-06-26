@@ -22,11 +22,13 @@ export class BearerTokenGuard implements CanActivate {
       context.getClass(),
     ]);
 
+    const req = context.switchToHttp().getRequest();
+
     if (isPublic) {
+      req.isRoutePublic = true;
+
       return true;
     }
-
-    const req = context.switchToHttp().getRequest();
 
     const rawToken = req.headers['authorization'];
 
@@ -55,6 +57,10 @@ export class AccessTokenGuard extends BearerTokenGuard {
 
     const req = context.switchToHttp().getRequest();
 
+    if (req.isRoutePublic) {
+      return true;
+    }
+
     if (req.tokenType !== 'access') {
       throw new UnauthorizedException('잘못된 토큰 타입입니다!');
     }
@@ -69,6 +75,10 @@ export class RefreshTokenGuard extends BearerTokenGuard {
     await super.canActivate(context);
 
     const req = context.switchToHttp().getRequest();
+
+    if (req.isRoutePublic) {
+      return true;
+    }
 
     if (req.tokenType !== 'refresh') {
       throw new UnauthorizedException('잘못된 토큰 타입입니다!');
