@@ -3,7 +3,7 @@ import { PaginateCommentDto } from './dto/paginate-comment.dto';
 import { CommonService } from 'src/common/common.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentsModel } from './entity/comments.entity';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { CreateCommentDto } from './dto/create-comment-dto';
 import { UsersModel } from 'src/users/entity/users.entity';
 import { DEFAULT_COMMENT_FIND_OPTIONS } from './const/default-comment-find-options.const';
@@ -16,6 +16,12 @@ export class CommentsService {
     private readonly commentsRepository: Repository<CommentsModel>,
     private readonly commonService: CommonService,
   ) {}
+
+  getRepository(qr?: QueryRunner) {
+    return qr
+      ? qr.manager.getRepository<CommentsModel>(CommentsModel)
+      : this.commentsRepository;
+  }
 
   async paginateComments(postId: number, dto: PaginateCommentDto) {
     return this.commonService.paginate(
@@ -51,8 +57,11 @@ export class CommentsService {
     postId: number,
     body: CreateCommentDto,
     author: UsersModel,
+    qr?: QueryRunner,
   ) {
-    return this.commentsRepository.save({
+    const repository = this.getRepository(qr);
+
+    return repository.save({
       ...body,
       post: {
         id: postId,
@@ -82,8 +91,10 @@ export class CommentsService {
     return newComment;
   }
 
-  async deleteComment(commentId: number) {
-    const comment = this.commentsRepository.findOne({
+  async deleteComment(commentId: number, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    const comment = repository.findOne({
       where: {
         id: commentId,
       },
@@ -93,7 +104,7 @@ export class CommentsService {
       throw new BadRequestException('Comment not found');
     }
 
-    await this.commentsRepository.delete(commentId);
+    await repository.delete(commentId);
     return commentId;
   }
 
