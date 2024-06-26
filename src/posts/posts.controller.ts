@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
@@ -21,9 +22,8 @@ import { PostsImagesService } from './image/images.service';
 import { LogInterceptor } from 'src/common/interceptor/log.interceptor';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
-import { Roles } from 'src/users/decorator/roles.decorator';
-import { RolesEnum } from 'src/users/const/roles.const';
 import { IsPublic } from 'src/common/decorator/is-public.decorator';
+import { IsPostMineOrAdminGuard } from './guard/is-post-mine-or-admin.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -76,20 +76,21 @@ export class PostsController {
     return this.postsService.getPostById(post.id, qr);
   }
 
-  //4) PATCH /posts/:id
+  //4) PATCH /posts/:postId
   // - id에 해당되는 특정 게시물을 수정합니다.
-  @Patch(':id')
+  @Patch(':postId')
+  @UseGuards(IsPostMineOrAdminGuard)
   patchPost(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('postId', ParseIntPipe) postId: number,
     @Body() body: UpdatePostDto,
   ) {
-    return this.postsService.updatePost(id, body);
+    return this.postsService.updatePost(postId, body);
   }
 
   //5) DELETE /posts/:id
   // - id에 해당되는 특정 게시물을 삭제합니다.
   @Delete(':id')
-  @Roles(RolesEnum.ADMIN)
+  @UseGuards(IsPostMineOrAdminGuard)
   deletePost(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.deletePost(id);
   }
