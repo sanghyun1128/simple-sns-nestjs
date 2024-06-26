@@ -10,6 +10,5 @@ export const DEFAULT_COMMENT_FIND_OPTIONS: FindManyOptions<CommentsModel> = {
       id: true,
       nickname: true,
     },
-    }
-  }
+  },
 };
