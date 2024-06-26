@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersModel } from './entity/users.entity';
@@ -45,5 +45,34 @@ export class UsersService {
     return this.usersRepository.findOne({
       where: { email },
     });
+  }
+
+  async followUser(followerId: number, followeeId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: followerId },
+      relations: ['followees'],
+    });
+
+    if (!user) {
+      throw new BadRequestException('Cannot find follower');
+    }
+
+    await this.usersRepository.save({
+      ...user,
+      followees: [...user.followees, { id: followeeId }],
+    });
+  }
+
+  async getFollowers(userId: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['followers'],
+    });
+
+    if (!user) {
+      throw new BadRequestException('Cannot find user');
+    }
+
+    return user.followers;
   }
 }
