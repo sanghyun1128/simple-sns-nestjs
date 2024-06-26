@@ -2,12 +2,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersModel } from './entity/users.entity';
+import { UserFollowersModel } from './entity/user-followers.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UsersModel)
     private readonly usersRepository: Repository<UsersModel>,
+    @InjectRepository(UserFollowersModel)
+    private readonly userFollowersRepository: Repository<UserFollowersModel>,
   ) {}
 
   async createUser(user: Pick<UsersModel, 'nickname' | 'email' | 'password'>) {
@@ -48,31 +51,56 @@ export class UsersService {
   }
 
   async followUser(followerId: number, followeeId: number) {
-    const user = await this.usersRepository.findOne({
-      where: { id: followerId },
-      relations: ['followees'],
+    const result = await this.userFollowersRepository.save({
+      follower: { id: followerId },
+      followee: { id: followeeId },
     });
 
-    if (!user) {
-      throw new BadRequestException('Cannot find follower');
-    }
-
-    await this.usersRepository.save({
-      ...user,
-      followees: [...user.followees, { id: followeeId }],
-    });
+    return true;
   }
 
-  async getFollowers(userId: number) {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-      relations: ['followers'],
-    });
+  async getFollowers(userId: number, isIncludeConfirmed: boolean) {
+    const where = { followee: { id: userId } };
 
-    if (!user) {
-      throw new BadRequestException('Cannot find user');
+    if (!isIncludeConfirmed) {
+      where['isConfirmed'] = true;
     }
 
-    return user.followers;
+    const result = await this.userFollowersRepository.find({
+      where,
+      relations: ['follower', 'followee'],
+    });
+
+    return result.map((item) => ({
+      id: item.follower.id,
+      nickname: item.follower.nickname,
+      isConfirmed: item.isConfirmed,
+    }));
+  }
+
+  async confirmFollow(followerId: number, followeeId: number) {
+    const exist = await this.userFollowersRepository.findOne({
+      where: { follower: { id: followerId }, followee: { id: followeeId } },
+    });
+
+    if (!exist) {
+      throw new BadRequestException('팔로우 요청을 찾을 수 없습니다.');
+    }
+
+    await this.userFollowersRepository.save({
+      ...exist,
+      isConfirmed: true,
+    });
+
+    return true;
+  }
+
+  async unfollowUser(followerId: number, followeeId: number) {
+    await this.userFollowersRepository.delete({
+      follower: { id: followerId },
+      followee: { id: followeeId },
+    });
+
+    return true;
   }
 }
