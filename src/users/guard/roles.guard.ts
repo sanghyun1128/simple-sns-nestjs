@@ -12,14 +12,14 @@ import { ROLES_KEY } from '../decorator/roles.decorator';
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRole = this.reflector.getAllAndOverride(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
     if (!requiredRole) {
-      return Promise.resolve(true);
+      return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
@@ -34,6 +34,6 @@ export class RolesGuard implements CanActivate {
       );
     }
 
-    return Promise.resolve(true);
+    return true;
   }
 }
